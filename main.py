@@ -1,9 +1,11 @@
 import argparse
 from datetime import datetime
 import re
+import os
+import pandas as pd
 import sys
 from src.frequency_bound import frequency_bound
-from src.create_corpus import create_corpus
+from src.create_corpus import create_corpus, read_corpus
 
 def main():
     parser = argparse.ArgumentParser()
@@ -26,11 +28,15 @@ def main():
         end_year = datetime(max(list(map(lambda x: int(x), years[0]))) + 1, 1, 1)
 
     # create unified corpus
-    df = create_corpus()
+    df = None
+    if (not os.path.exists("data/corpus.gzip")): df = create_corpus()
+    else: df = read_corpus()
+    df["date"] = df["date"].astype(float).astype(int).astype(str)
+    df["date"] = pd.to_datetime(df['date'], format="%Y%m%d")
 
-    # df = frequency_bound(word, start_year, end_year)
-    # df.to_csv("out.csv")
+    df = frequency_bound(df, word, start_year, end_year)
     print(df)
+    df.to_csv("freq.csv")
 
 if __name__ == "__main__":
     main()

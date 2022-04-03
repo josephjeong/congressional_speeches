@@ -56,7 +56,7 @@ def create_corpus():
         # speakers.drop(columns=["number_within_file"])
     
     print("joining tables")
-    df = pd.merge(speeches, descriptions, on="speech_id", how="left")
+    df = pd.merge(speeches, descriptions, on="speech_id")
     df = pd.merge(df, speakers, on="speech_id", how="left")
     # df = pd.merge(speeches, descriptions, on="speech_id")
     # df = pd.merge(df, speakers, on="speech_id")
@@ -89,6 +89,15 @@ def create_corpus():
     df.loc[(df["state_x"] != "Unknown") & (df["state_y"] == ""), "state"] = df["state_x"]
 
     df.drop(columns=["first_name", "firstname", "last_name", "lastname", "chamber_x", "chamber_y", "gender_x", "gender_y", "state_x", "state_y", "speakerid", "nonvoting"], inplace=True)
+    df = df.astype(str)
+
+    # df["date"] = pd.to_datetime(df['date'],unit='s')
 
     # date, who said it, which party, which chamber, state, district
+    print("saving parquet")
+    df.to_parquet("data/corpus.gzip", index=False, compression="gzip", engine="pyarrow")
     return df
+
+def read_corpus():
+    print("load parquet")
+    return pd.read_parquet("data/corpus.gzip", engine="pyarrow")
