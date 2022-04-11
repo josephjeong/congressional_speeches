@@ -83,6 +83,7 @@ def create_corpus():
     df.loc[(df["gender_x"] != "Special") & (df["gender_y"] != ""), "gender"] = df["gender_y"]
     df.loc[(df["gender_x"] != "Special") & (df["gender_y"] == ""), "gender"] = df["gender_x"]
 
+    # state is missing - might be prioritising wrong field -> bug in code might be prioritising descr_ over SpeakerMap
     df.loc[(df["state_x"] == "Unknown") & (df["state_y"] == ""), "state"] = " "
     df.loc[(df["state_x"] == "Unknown") & (df["state_y"] != ""), "state"] = df["state_y"]
     df.loc[(df["state_x"] != "Unknown") & (df["state_y"] != ""), "state"] = df["state_y"]

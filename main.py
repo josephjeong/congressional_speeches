@@ -36,7 +36,7 @@ def main():
 
     df = frequency_bound(df, word, start_year, end_year)
     print(df)
-    df.to_csv("freq.csv")
+    df.to_csv("freq.csv") #sometimes this overflows into the next row
 
 if __name__ == "__main__":
     main()
