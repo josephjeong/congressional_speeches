@@ -61,33 +61,37 @@ def create_corpus():
     # df = pd.merge(speeches, descriptions, on="speech_id")
     # df = pd.merge(df, speakers, on="speech_id")
 
+    print(df)
+
     print("deduping data")
-    df.fillna('', inplace=True)
-    df.loc[(df["first_name"] == "Unknown") & (df["firstname"] == ""), "f_name"] = " "
-    df.loc[(df["first_name"] == "Unknown") & (df["firstname"] != ""), "f_name"] = df["firstname"]
-    df.loc[(df["first_name"] != "Unknown") & (df["firstname"] != ""), "f_name"] = df["firstname"]
-    df.loc[(df["first_name"] != "Unknown") & (df["firstname"] == ""), "f_name"] = df["first_name"]
+    df.fillna('.', inplace=True)
+    df.loc[(df["first_name"] == "Unknown") & (df["firstname"] == "."), "f_name"] = " "
+    df.loc[(df["first_name"] == "Unknown") & (df["firstname"] != "."), "f_name"] = df["firstname"]
+    df.loc[(df["first_name"] != "Unknown") & (df["firstname"] != "."), "f_name"] = df["firstname"]
+    df.loc[(df["first_name"] != "Unknown") & (df["firstname"] == "."), "f_name"] = df["first_name"]
 
-    df.loc[(df["last_name"] == "Unknown") & (df["lastname"] == ""), "l_name"] = " "
-    df.loc[(df["last_name"] == "Unknown") & (df["lastname"] != ""), "l_name"] = df["lastname"]
-    df.loc[(df["last_name"] != "Unknown") & (df["lastname"] != ""), "l_name"] = df["lastname"]
-    df.loc[(df["last_name"] != "Unknown") & (df["lastname"] == ""), "l_name"] = df["last_name"]
+    df.loc[(df["last_name"] == "Unknown") & (df["lastname"] == "."), "l_name"] = " "
+    df.loc[(df["last_name"] == "Unknown") & (df["lastname"] != "."), "l_name"] = df["lastname"]
+    df.loc[(df["last_name"] != "Unknown") & (df["lastname"] != "."), "l_name"] = df["lastname"]
+    df.loc[(df["last_name"] != "Unknown") & (df["lastname"] == "."), "l_name"] = df["last_name"]
 
-    df.loc[(df["chamber_x"] == "E") & (df["chamber_y"] == ""), "chamber"] = " "
-    df.loc[(df["chamber_x"] == "E") & (df["chamber_y"] != ""), "chamber"] = df["chamber_y"]
-    df.loc[(df["chamber_x"] != "E") & (df["chamber_y"] != ""), "chamber"] = df["chamber_y"]
-    df.loc[(df["chamber_x"] != "E") & (df["chamber_y"] == ""), "chamber"] = df["chamber_x"]
+    df.loc[(df["chamber_x"] == "E") & (df["chamber_y"] == "."), "chamber"] = " "
+    df.loc[(df["chamber_x"] == "E") & (df["chamber_y"] != "."), "chamber"] = df["chamber_y"]
+    df.loc[(df["chamber_x"] != "E") & (df["chamber_y"] != "."), "chamber"] = df["chamber_y"]
+    df.loc[(df["chamber_x"] != "E") & (df["chamber_y"] == "."), "chamber"] = df["chamber_x"]
 
-    df.loc[(df["gender_x"] == "Special") & (df["gender_y"] == ""), "gender"] = " "
-    df.loc[(df["gender_x"] == "Special") & (df["gender_y"] != ""), "gender"] = df["gender_y"]
-    df.loc[(df["gender_x"] != "Special") & (df["gender_y"] != ""), "gender"] = df["gender_y"]
-    df.loc[(df["gender_x"] != "Special") & (df["gender_y"] == ""), "gender"] = df["gender_x"]
+    df.loc[(df["gender_x"] == "Special") & (df["gender_y"] == "."), "gender"] = " "
+    df.loc[(df["gender_x"] == "Special") & (df["gender_y"] != "."), "gender"] = df["gender_y"]
+    df.loc[(df["gender_x"] != "Special") & (df["gender_y"] != "."), "gender"] = df["gender_y"]
+    df.loc[(df["gender_x"] != "Special") & (df["gender_y"] == "."), "gender"] = df["gender_x"]
 
     # state is missing - might be prioritising wrong field -> bug in code might be prioritising descr_ over SpeakerMap
-    df.loc[(df["state_x"] == "Unknown") & (df["state_y"] == ""), "state"] = " "
-    df.loc[(df["state_x"] == "Unknown") & (df["state_y"] != ""), "state"] = df["state_y"]
-    df.loc[(df["state_x"] != "Unknown") & (df["state_y"] != ""), "state"] = df["state_y"]
-    df.loc[(df["state_x"] != "Unknown") & (df["state_y"] == ""), "state"] = df["state_x"]
+    df.loc[(df["state_x"] == "Unknown") & (df["state_y"] == "."), "state"] = " "
+    df.loc[(df["state_x"] == "Unknown") & (df["state_y"] != "."), "state"] = df["state_y"]
+    df.loc[(df["state_x"] != "Unknown") & (df["state_y"] != "."), "state"] = df["state_y"]
+    df.loc[(df["state_x"] != "Unknown") & (df["state_y"] == "."), "state"] = df["state_x"]
+
+    print(df)
 
     df.drop(columns=["first_name", "firstname", "last_name", "lastname", "chamber_x", "chamber_y", "gender_x", "gender_y", "state_x", "state_y", "speakerid", "nonvoting"], inplace=True)
     df = df.astype(str)
