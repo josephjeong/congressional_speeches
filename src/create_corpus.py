@@ -3,6 +3,7 @@ import re
 import os 
 import concurrent.futures
 from tqdm import tqdm
+import numpy as np
 
 def load_speeches(dir: str) -> pd.DataFrame:
     with open(dir, "r") as file:
@@ -27,8 +28,10 @@ def create_corpus():
                 total=len(speech_files),
                 desc= "Reading In Speeches"
             )
-        ).dropna()
+        )
         speeches.columns = ["speech_id", "speech"]
+        speeches["speech_id"].replace('', np.nan, inplace=True)
+        speeches.dropna(subset=["speech_id"], inplace=True)
         speeches["speech_id"] = speeches["speech_id"].astype(int)
 
     descr_files = list(map(lambda x: DIR + x, filter(lambda x: "descr" in x, files)))
@@ -39,11 +42,13 @@ def create_corpus():
                 total=len(descr_files),
                 desc= "Reading In Descriptions"
             )
-        ).dropna()
+        )
+        descriptions["speech_id"].replace('', np.nan, inplace=True)
+        descriptions.dropna(subset=["speech_id"], inplace=True)
         descriptions["speech_id"] = descriptions["speech_id"].astype(int)
         descriptions.drop(columns=["number_within_file", "line_start", "line_end", "file", "char_count", "word_count"], inplace=True)
 
-    speaker_files = list(map(lambda x: DIR + x, filter(lambda x: "SpeakerMap" in x, files)))
+    speaker_files = list(map(lambda f: DIR + f, filter(lambda x: "SpeakerMap" in x, files)))
     speakers = None
     with concurrent.futures.ProcessPoolExecutor() as executor:
         speakers = pd.concat(tqdm( # flatten and add progress bar
@@ -51,7 +56,9 @@ def create_corpus():
                 total=len(descr_files),
                 desc= "Reading In Speakers"
             )
-        ).dropna()
+        )
+        speakers["speech_id"].replace('', np.nan, inplace=True)
+        speakers.dropna(subset=["speech_id"], inplace=True)
         speakers["speech_id"] = speakers["speech_id"].astype(int)
         # speakers.drop(columns=["number_within_file"])
     
@@ -59,12 +66,12 @@ def create_corpus():
     df = pd.merge(speeches, descriptions, on="speech_id")
     df = pd.merge(df, speakers, on="speech_id", how="left")
     # df = pd.merge(speeches, descriptions, on="speech_id")
-    # df = pd.merge(df, speakers, on="speech_id")
+    # df = pd.merge(df, speakers, on="speech_id")    
 
-    print(df)
-
+    # firstname is speakermap
     print("deduping data")
     df.fillna('.', inplace=True)
+
     df.loc[(df["first_name"] == "Unknown") & (df["firstname"] == "."), "f_name"] = " "
     df.loc[(df["first_name"] == "Unknown") & (df["firstname"] != "."), "f_name"] = df["firstname"]
     df.loc[(df["first_name"] != "Unknown") & (df["firstname"] != "."), "f_name"] = df["firstname"]
@@ -90,8 +97,6 @@ def create_corpus():
     df.loc[(df["state_x"] == "Unknown") & (df["state_y"] != "."), "state"] = df["state_y"]
     df.loc[(df["state_x"] != "Unknown") & (df["state_y"] != "."), "state"] = df["state_y"]
     df.loc[(df["state_x"] != "Unknown") & (df["state_y"] == "."), "state"] = df["state_x"]
-
-    print(df)
 
     df.drop(columns=["first_name", "firstname", "last_name", "lastname", "chamber_x", "chamber_y", "gender_x", "gender_y", "state_x", "state_y", "speakerid", "nonvoting"], inplace=True)
     df = df.astype(str)
