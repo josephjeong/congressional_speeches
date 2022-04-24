@@ -40,4 +40,20 @@ pp = pprint.PrettyPrinter(indent=4)
 print(driver.title)
 print(driver.get_cookies())
 pp.pprint(driver.requests)
+
+reqs = driver.requests
+
 driver.quit()
+
+text_req = list(filter(lambda req: "TextGenerator" in req.url , reqs))[-1]
+req_headers = dict(text_req.headers)
+
+pp.pprint(req_headers)
+
+req = requests.get(url='https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=16&print=30&sectioncount=2&ext=.txt', headers=req_headers)
+print("yay it works!\n", req.text)
+
+
+# for req in reqs:
+#     if("TextGenerator" in req.url):
+#         print(req)
