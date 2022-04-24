@@ -1,0 +1,7 @@
+Facts I know for sure:
+
+1. having the correct headers after logging in with selenium allows me to access all the records
+
+
+2. id: seems to refer to the starting page
+3. print: seems to refer to ending page
