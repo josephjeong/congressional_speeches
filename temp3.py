@@ -50,16 +50,69 @@ req_headers = dict(text_req.headers)
 
 pp.pprint(req_headers)
 
-for i in range(0, 1000):
-    req = requests.get(url='https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=16&print=30&sectioncount=2&ext=.txt', headers=req_headers)
-    if req.status_code != 200:
-        print("this failed")
-        import sys
-        sys.exit()
-    print("another one", i, req.text)
-# print("yay it works!\n", req.text)
+# req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0087&collection=congrec&section=15&print=section&ext=.txt", headers=req_headers)
+# print(req.text)
+# req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0087&collection=congrec&section=16&print=section&ext=.txt", headers=req_headers)
+# print(req.text)
+
+# handle=hein.congrec/conglob0087 -> handle=hein.congrec/conglob0127
+# section=15 -> until text is gone in regex match: <pre>([\s\S]*)<\/pre>
+import re
+
+req_params = list(map(lambda file_num: {
+    "handle": "hein.congrec/conglob" + str(file_num).zfill(4),
+    "collection": "congrec",
+    "print": "section",
+    "ext": ".txt"
+}, range(1, 128)))
+
+def send_req(params):
+    i = 2
+    text = ""
+    output = []
+    while text != "\n":
+        params["section"] = i
+        i += 1
+        try:
+            req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers, timeout=30)
+            try:
+                text = re.findall("<pre>([\s\S]*)<\/pre>", req.text)[0]
+            except IndexError:
+                text = "\n"
+        except requests.exceptions.Timeout:
+            text = "\n"
+        output.append(text)
+        print(params["handle"], i)
+    return output
+
+from concurrent.futures import ThreadPoolExecutor
+
+from pprint import pprint as zprint
+from tqdm import tqdm
+
+with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
+    all_transcript = list(tqdm(executor.map(
+        send_req, req_params
+    ), total=len(req_params)))
+    print("concatenated all lists!")
+    with open("output.txt", "x") as f:
+        zprint(all_transcript, stream=f)
 
 
-# for req in reqs:
-#     if("TextGenerator" in req.url):
-#         print(req)
+# for congrec in range(1, 128):
+#     handle = "hein.congrec/conglob" + str(congrec).zfill(4)
+#     text = handle
+#     i = 2
+#     while text != "\n":
+#         params = {
+#             "handle": handle,
+#             "collection": "congrec",
+#             "section": i,
+#             "print": "section",
+#             "ext": ".txt"
+#         }
+#         i += 1
+#         req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers)
+#         text = re.findall("<pre>([\s\S]*)<\/pre>", req.text)[0]
+#         print(text, len(text))
+#     print("NEXT! YAYEEETTT!")

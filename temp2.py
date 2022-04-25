@@ -1,11 +1,5 @@
-# "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/PrintRequest?collection=congrec&nocover=&handle=hein.congrec%2Fconglob0127&id=5&section=&skipstep=1&fromid=1&toid=357&format=Text&submitx=Print%2FDownload"
 
-# "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/PrintRequest?collection=congrec&nocover=&handle=hein.congrec%2Fconglob0127&id=5&section=&skipstep=1&fromid=1&toid=15&format=Text&submitx=Print%2FDownload"
-
-
-# "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec%2Fconglob0127&collection=congrec&section=0&id=1&print=15&sectioncount=2&ext=.txt"
-# "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=1&print=15&sectioncount=2&ext=.txt"
-
+from typing import List, Tuple
 from pytest import param
 import requests
 
@@ -50,16 +44,37 @@ req_headers = dict(text_req.headers)
 
 pp.pprint(req_headers)
 
-for i in range(0, 1000):
-    req = requests.get(url='https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=16&print=30&sectioncount=2&ext=.txt', headers=req_headers)
-    if req.status_code != 200:
-        print("this failed")
-        import sys
-        sys.exit()
-    print("another one", i, req.text)
+# for i in range(0, 1000):
+#     req = requests.get(url='https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=16&print=30&sectioncount=2&ext=.txt', headers=req_headers)
+#     if req.status_code != 200:
+#         print("this failed")
+#         import sys
+#         sys.exit()
+#     print("another one", i, len(req.text))
 # print("yay it works!\n", req.text)
 
+from concurrent.futures import ThreadPoolExecutor
 
-# for req in reqs:
-#     if("TextGenerator" in req.url):
-#         print(req)
+def send_req(starts: Tuple[int, int]) -> str:
+    params = {
+        "handle": "hein.congrec/conglob0127",
+        "collection": "congrec",
+        "section": 0,
+        "id": starts[0],
+        "print": starts[1],
+        "sectioncount": 2,
+        "ext": ".txt"
+    }
+    # https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=956&print=21&sectioncount=1&ext=.txt
+    print(params)
+    req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers)
+    return req.text
+
+starts = list(map(lambda x: (x, x+15), range(0, 200, 15)))
+print(starts)
+
+with ThreadPoolExecutor() as executor:
+    all_transcript = list(executor.map(
+        send_req, starts
+    ))
+    pp.pprint(all_transcript)
