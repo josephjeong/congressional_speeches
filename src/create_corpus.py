@@ -24,7 +24,7 @@ def create_corpus():
     speeches = None # higher namespace
     with concurrent.futures.ProcessPoolExecutor() as executor:
         speeches = pd.concat(tqdm( # flatten and add progress bar
-                executor.map(load_speeches, speech_files, chunksize=1), # read stories and create rows
+                executor.map(load_speeches, speech_files), # read stories and create rows
                 total=len(speech_files),
                 desc= "Reading In Speeches"
             )
@@ -38,7 +38,7 @@ def create_corpus():
     descriptions = None
     with concurrent.futures.ProcessPoolExecutor() as executor:
         descriptions = pd.concat(tqdm( # flatten and add progress bar
-                executor.map(load_descriptions, descr_files, chunksize=1), # read stories and create rows
+                executor.map(load_descriptions, descr_files), # read stories and create rows
                 total=len(descr_files),
                 desc= "Reading In Descriptions"
             )
@@ -92,7 +92,6 @@ def create_corpus():
     df.loc[(df["gender_x"] != "Special") & (df["gender_y"] != "."), "gender"] = df["gender_y"]
     df.loc[(df["gender_x"] != "Special") & (df["gender_y"] == "."), "gender"] = df["gender_x"]
 
-    # state is missing - might be prioritising wrong field -> bug in code might be prioritising descr_ over SpeakerMap
     df.loc[(df["state_x"] == "Unknown") & (df["state_y"] == "."), "state"] = " "
     df.loc[(df["state_x"] == "Unknown") & (df["state_y"] != "."), "state"] = df["state_y"]
     df.loc[(df["state_x"] != "Unknown") & (df["state_y"] != "."), "state"] = df["state_y"]
