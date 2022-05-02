@@ -6,15 +6,15 @@ from tqdm import tqdm
 import numpy as np
 
 def load_speeches(dir: str) -> pd.DataFrame:
-    with open(dir, "r") as file:
+    with open(dir, "r", encoding="latin1") as file:
         lines = "\n".join(list(map(lambda x: re.findall(r"^(.*?)\|", x)[0] +"|"+re.findall(r"^.*?\|(.*)", x)[0].replace("|", " "), file.readlines()[1:])))
     return pd.DataFrame([x.split("|") for x in lines.split("\n")])
 
 def load_descriptions(dir: str) -> pd.DataFrame():
-    return pd.read_csv(dir, sep="|", encoding="ansi")
+    return pd.read_csv(dir, sep="|", encoding="latin1")
 
 def load_speakers(dir: str) -> pd.DataFrame():
-    return pd.read_csv(dir, sep="|", encoding="ansi")
+    return pd.read_csv(dir, sep="|", encoding="latin1")
 
 def create_corpus():
     DIR = "data/hein-bound/"
