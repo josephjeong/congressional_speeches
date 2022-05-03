@@ -5,6 +5,6 @@ import pandas as pd
 def frequency_bound(df : pd.DataFrame , word: Optional[str], start_year: Optional[datetime], end_year: Optional[datetime]) -> pd.DataFrame:
     print("processing frequency within constraints")
     if start_year: df = df.loc[(df["date"] >= start_year) & (df["date"] < end_year)]
-    if word: df = df.loc[df["speech"].str.contains(word)]
+    if word: df = df.loc[df["speech"].str.contains(r"\b{}\b".format(word), regex=True)]
     return df
 
