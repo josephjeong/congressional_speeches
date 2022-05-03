@@ -4,6 +4,8 @@ import os
 import concurrent.futures
 from tqdm import tqdm
 import numpy as np
+import nltk
+from nltk.stem import PorterStemmer
 
 def load_speeches(dir: str) -> pd.DataFrame:
     with open(dir, "r", encoding="latin1") as file:
@@ -15,6 +17,12 @@ def load_descriptions(dir: str) -> pd.DataFrame():
 
 def load_speakers(dir: str) -> pd.DataFrame():
     return pd.read_csv(dir, sep="|", encoding="latin1")
+
+STEMMER = PorterStemmer()
+def clean(raw):
+    tokenized_text = nltk.word_tokenize(raw)
+    stemmed = list(map(lambda w: STEMMER.stem(w), tokenized_text))
+    return " ".join(stemmed)
 
 def create_corpus():
     DIR = "data/hein-bound/"
@@ -100,7 +108,9 @@ def create_corpus():
     df.drop(columns=["first_name", "firstname", "last_name", "lastname", "chamber_x", "chamber_y", "gender_x", "gender_y", "state_x", "state_y", "speakerid", "nonvoting"], inplace=True)
     df = df.astype(str)
 
-    # df["date"] = pd.to_datetime(df['date'],unit='s')
+    # stem words
+    print("creating stemmed speeches")
+    df["stemmed"] = df["speech"].apply(clean)
 
     # date, who said it, which party, which chamber, state, district
     print("saving parquet")

@@ -4,13 +4,14 @@ import re
 import os
 import pandas as pd
 import sys
-from src.frequency_bound import frequency_bound
+from src.frequency_bound import frequency_bound, frequency_bound_stem
 from src.create_corpus import create_corpus, read_corpus
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--word', type=str, default=None, help='The word to search for e.g. "Amalgamation"')
     parser.add_argument('--years', type=str, default=None, help='The timeframe in years to search within. (e.g. "1890-1920")')
+    parser.add_argument('--stem', action="store_true", default=False, help= "Search stemmed instead of whole")
     args = parser.parse_args()
 
     # parse the arguments given
@@ -18,6 +19,7 @@ def main():
     years = args.years
     start_year = None
     end_year = None
+    stem = args.stem
     if years:
         s = r"^(\d{4})-(\d{4})$"
         years = re.findall(s, args.years)
@@ -34,7 +36,8 @@ def main():
     df["date"] = df["date"].astype(float).astype(int).astype(str)
     df["date"] = pd.to_datetime(df['date'], format="%Y%m%d")
 
-    df = frequency_bound(df, word, start_year, end_year)
+    if stem: df = frequency_bound_stem(df, word, start_year, end_year)
+    else: df = frequency_bound(df, word, start_year, end_year)
     print(df)
     df.to_csv("freq.csv", sep="|", index=False) #sometimes this overflows into the next row
 
