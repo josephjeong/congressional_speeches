@@ -64,7 +64,7 @@ req_params = list(map(lambda file_num: {
     "collection": "congrec",
     "print": "section",
     "ext": ".txt"
-}, range(1, 128)))
+}, range(1, 128)[0:1]))
 
 def send_req(params):
     i = 2
@@ -77,6 +77,7 @@ def send_req(params):
             req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers, timeout=30)
             try:
                 text = re.findall("<pre>([\s\S]*)<\/pre>", req.text)[0]
+                # replace newline with space to eliminate reandom newlines in requests?
             except IndexError:
                 text = "\n"
         except requests.exceptions.Timeout:
@@ -95,8 +96,13 @@ with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
         send_req, req_params
     ), total=len(req_params)))
     print("concatenated all lists!")
-    with open("output.txt", "x") as f:
-        zprint(all_transcript, stream=f)
+    concat_transcripts = list(map(lambda l: "SEPERATOR-THING-BRUH".join(l), all_transcript))
+    print(concat_transcripts[0])
+    
+    print("concatenated all lists!")
+    with open("output.txt", "w", encoding="utf-8") as f:
+        f.truncate()
+        f.write(concat_transcripts[0])
 
 
 # for congrec in range(1, 128):
