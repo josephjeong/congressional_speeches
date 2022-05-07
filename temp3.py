@@ -66,6 +66,11 @@ req_params = list(map(lambda file_num: {
     "ext": ".txt"
 }, range(1, 128)[0:1]))
 
+def format_text(txt: str):
+    txt = txt.replace("\n", "")
+    txt = txt.replace("-", "")
+    return txt
+
 def send_req(params):
     i = 2
     text = ""
@@ -79,7 +84,7 @@ def send_req(params):
                 text = re.findall("<pre>([\s\S]*)<\/pre>", req.text)[0]
                 # replace newline with space to eliminate reandom newlines in requests?
             except IndexError:
-                text = "\n"
+                text = "\n" # newlines are adding double newlines but it seems to break otherwise
         except requests.exceptions.Timeout:
             text = "\n"
         output.append(text)
@@ -87,38 +92,19 @@ def send_req(params):
     return output
 
 from concurrent.futures import ThreadPoolExecutor
-
-from pprint import pprint as zprint
 from tqdm import tqdm
 
 with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
     all_transcript = list(tqdm(executor.map(
         send_req, req_params
-    ), total=len(req_params)))
+    ), total=len(req_params)))[0]
     print("concatenated all lists!")
-    concat_transcripts = list(map(lambda l: "SEPERATOR-THING-BRUH".join(l), all_transcript))
-    print(concat_transcripts[0])
+    all_transcript = list(map(format_text, all_transcript))
+    concat_transcripts = "SEPERATOR-THING-BRUH".join(all_transcript)
+    concat_transcripts = concat_transcripts.replace("\n", "")
+    print(concat_transcripts)
     
     print("concatenated all lists!")
     with open("output.txt", "w", encoding="utf-8") as f:
         f.truncate()
-        f.write(concat_transcripts[0])
-
-
-# for congrec in range(1, 128):
-#     handle = "hein.congrec/conglob" + str(congrec).zfill(4)
-#     text = handle
-#     i = 2
-#     while text != "\n":
-#         params = {
-#             "handle": handle,
-#             "collection": "congrec",
-#             "section": i,
-#             "print": "section",
-#             "ext": ".txt"
-#         }
-#         i += 1
-#         req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers)
-#         text = re.findall("<pre>([\s\S]*)<\/pre>", req.text)[0]
-#         print(text, len(text))
-#     print("NEXT! YAYEEETTT!")
+        f.write(concat_transcripts)
