@@ -1,5 +1,6 @@
 /data
 __pycache__
 *.log
+*.txt
 *.csv
 chromedriver

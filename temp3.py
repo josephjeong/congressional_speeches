@@ -1,3 +1,4 @@
+
 # "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/PrintRequest?collection=congrec&nocover=&handle=hein.congrec%2Fconglob0127&id=5&section=&skipstep=1&fromid=1&toid=357&format=Text&submitx=Print%2FDownload"
 
 # "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/PrintRequest?collection=congrec&nocover=&handle=hein.congrec%2Fconglob0127&id=5&section=&skipstep=1&fromid=1&toid=15&format=Text&submitx=Print%2FDownload"
@@ -6,7 +7,6 @@
 # "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec%2Fconglob0127&collection=congrec&section=0&id=1&print=15&sectioncount=2&ext=.txt"
 # "https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=1&print=15&sectioncount=2&ext=.txt"
 
-from pytest import param
 import requests
 
 # res = requests.get("https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?handle=hein.congrec/conglob0127&collection=congrec&section=0&id=1&print=15&sectioncount=2&ext=.txt")
@@ -64,7 +64,7 @@ req_params = list(map(lambda file_num: {
     "collection": "congrec",
     "print": "section",
     "ext": ".txt"
-}, range(1, 128)[0:1]))
+}, range(1, 128)[0:20]))
 
 def format_text(txt: str):
     txt = txt.replace("\n", "")
@@ -88,7 +88,7 @@ def send_req(params):
         except requests.exceptions.Timeout:
             text = "\n"
         output.append(text)
-        print(params["handle"], i)
+        print(str(params["handle"]) + " " + str(i))
     return output
 
 from concurrent.futures import ThreadPoolExecutor
@@ -97,14 +97,17 @@ from tqdm import tqdm
 with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
     all_transcript = list(tqdm(executor.map(
         send_req, req_params
-    ), total=len(req_params)))[0]
+    ), total=len(req_params)))
+    concat_list = [j for i in all_transcript for j in i]
     print("concatenated all lists!")
-    all_transcript = list(map(format_text, all_transcript))
+    all_transcript = list(map(format_text, concat_list))
     concat_transcripts = "SEPERATOR-THING-BRUH".join(all_transcript)
     concat_transcripts = concat_transcripts.replace("\n", "")
-    print(concat_transcripts)
+    # concat_transcripts = concat_transcripts.lower()
     
     print("concatenated all lists!")
     with open("output.txt", "w", encoding="utf-8") as f:
         f.truncate()
         f.write(concat_transcripts)
+
+concat_transcripts.lower()
