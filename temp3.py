@@ -101,7 +101,7 @@ with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
     concat_list = [j for i in all_transcript for j in i]
     print("concatenated all lists!")
     all_transcript = list(map(format_text, concat_list))
-    concat_transcripts = "SEPERATOR-THING-BRUH".join(all_transcript)
+    concat_transcripts = "SEPERATOR".join(all_transcript)
     concat_transcripts = concat_transcripts.replace("\n", "")
     # concat_transcripts = concat_transcripts.lower()
     
