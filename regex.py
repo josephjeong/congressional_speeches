@@ -43,7 +43,8 @@ data = [[house, month, day, year, speech] for house, month, day, year, speech in
 data = list(map(speech_dataframes, data))
 data = [item for sublist in data for item in sublist]
 df = DataFrame(data)
-df.to_csv("speeches.csv")
+df.to_csv("speeches.csv", sep="|")
+df[:3000].to_csv("smaller.csv", sep="|")
 # for row in data:
 #     new_rows = []
 #     for key in row[4]:

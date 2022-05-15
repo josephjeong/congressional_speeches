@@ -64,7 +64,7 @@ req_params = list(map(lambda file_num: {
     "collection": "congrec",
     "print": "section",
     "ext": ".txt"
-}, range(1, 128)[0:20]))
+}, range(1, 128)))
 
 def format_text(txt: str):
     txt = txt.replace("\n", "")
