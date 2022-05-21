@@ -13,6 +13,3 @@ for err in chkr:
     sug = err.suggest()
     print(err.word, sug)
     err.replace(sug)
-
-import enchant
-help(enchant)

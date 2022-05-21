@@ -19,7 +19,7 @@ def speech_dataframes(data: List) -> List[List]:
     speeches = re.split(r'^\s(?:Mr\.(?:(?:\s[A-Z].{1}[A-Z]*?)+)\W|(?:The\s(?:SPEAKER|VICE\sPRESIDENT)))', txt, flags=re.MULTILINE)
     speeches = list(map(lambda s: s.replace("\n", " ") if s else "", speeches))
 
-    print(len(clean_names) - len(speeches))
+    # print(len(clean_names) - len(speeches))
     
     labelled_speeches = zip(clean_names, speeches)
     return [[data[0], data[1], data[2], data[3], l[0], l[1]] for l in labelled_speeches]
@@ -43,8 +43,9 @@ data = [[house, month, day, year, speech] for house, month, day, year, speech in
 data = list(map(speech_dataframes, data))
 data = [item for sublist in data for item in sublist]
 df = DataFrame(data)
-df.to_csv("speeches.csv", sep="|")
-df[:3000].to_csv("smaller.csv", sep="|")
+df.columns = ["house", "month", "day", "year", "clean_names", "speeches"]
+df.to_csv("speeches.csv", sep="|", index=False, header=True)
+# df[:3000].to_csv("smaller.csv", sep="|")
 # for row in data:
 #     new_rows = []
 #     for key in row[4]:
