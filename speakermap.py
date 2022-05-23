@@ -1,4 +1,3 @@
-from doctest import Example
 import pandas as pd
 
 speakers = pd.read_csv("data/HSall_members.csv")
