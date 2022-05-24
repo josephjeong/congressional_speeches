@@ -10,18 +10,12 @@ from src.scrape import scrape
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--scrape', action="store_true", default=False)
+    # parser.add_argument('--scrape', action="store_true", default=False)
     parser.add_argument('--word', type=str, default=None, help='The word to search for e.g. "Amalgamation"')
     parser.add_argument('--years', type=str, default=None, help='The timeframe in years to search within. (e.g. "1890-1920")')
     parser.add_argument('--stem', action="store_true", default=False, help= "Search stemmed instead of whole")
     args = parser.parse_args()
-    print('woee')
 
-    if args.scrape: 
-        print("wow")
-        scrape()
-        return
-    return
     # parse the arguments given
     word = args.word
     years = args.years
