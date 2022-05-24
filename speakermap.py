@@ -30,6 +30,7 @@ print(df)
 df['lastname'] = df['lastname'].fillna(0)
 df['house'] = df['house'].fillna(0)
 df= pd.merge(df, speakers, on=["lastname", "house"], how="left")
+df.to_csv("speakermap.csv", sep="|", index=False, header=True)
 print(df)
 
 """
