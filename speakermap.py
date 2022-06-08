@@ -22,10 +22,17 @@ speakers = speakers[["lastname", "bioname", "state_abbrev", "house", "party_name
 
 # print(speakers)
 
+session_dates = pd.read_csv("data/congress_dates.csv")
+session_dates["Begin Date"] = pd.to_datetime(session_dates["Begin Date"], format="%b %d, %Y", errors="raise")
+session_dates["Adjourn Date"] = pd.to_datetime(session_dates["Adjourn Date"], format="%b %d, %Y", errors="raise")
+
 df = pd.read_csv("data/speeches.csv", delimiter="|")
 df["lastname"] = df["clean_names"].str.extract(r"\b(\w*?)$")
 # df.drop(columns=["clean_names", "speeches"], inplace=True)
 df.drop(columns=["clean_names"], inplace=True)
+
+df[['month','day','year']].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f')
+
 
 df['lastname'] = df['lastname'].fillna(0)
 df['house'] = df['house'].fillna(0)
