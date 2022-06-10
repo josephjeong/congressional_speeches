@@ -120,5 +120,8 @@ df.drop_duplicates(subset=["house", "month", "day", "year", "speeches", "lastnam
 df.sort_index(inplace=True)
 df.reset_index(inplace=True, drop=True)
 
-df.to_csv("speakermap.csv", sep="|", index=False, header=True)
-df_duplicates.to_csv("speakermap_duplicates.csv", sep="|", index=False, header=True)
+"""
+'house', 'month', 'day', 'year', 'speeches', 'lastname', 'datetime', 'bioname', 'state_abbrev', 'party_name', 'congress', 'Begin Date', 'Adjourn Date'
+"""
+# df.to_csv("speakermap.csv", sep="|", index=False, header=True)
+# df_duplicates.to_csv("speakermap_duplicates.csv", sep="|", index=False, header=True)

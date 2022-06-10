@@ -118,5 +118,8 @@ def create_corpus():
     return df
 
 def read_corpus():
+    """
+    speech_id speech date speaker party district f_name l_name chamber gender state stemmed
+    """
     print("load parquet")
     return pd.read_parquet("data/corpus.gzip", engine="pyarrow")
