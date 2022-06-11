@@ -1,37 +1,11 @@
+'''
+possible improvements:
+- keep president from speakers, and combine with l_name: "president"
+'''
+
 import pandas as pd
 from datetime import datetime
 
-speakers = pd.read_csv("data/HSall_members.csv")
-speakers = speakers.dropna(subset=["died", "born"])
-speakers = speakers[["congress", "chamber", "state_abbrev", "bioname", "party_code", "born", "died"]]
-speakers["born"] = speakers["born"].astype(int)
-speakers["died"] = speakers["died"].astype(int)
-speakers["congress"] = speakers["congress"].astype(int)
-speakers = speakers[(speakers["congress"] >= 23) & (speakers["congress"] <= 45)]
-speakers = speakers [speakers["chamber"] != "President"]
-
-# parties sourced from: https://voteview.com/articles/data_help_parties
-parties = pd.read_csv("data/HSall_parties.csv")[["party_code", "party_name"]]
-speakers = pd.merge(speakers, parties, on="party_code")
-
-speakers[["lastname", "firstname"]] = speakers["bioname"].str.split(",", n=1, expand=True)
-speakers.loc[speakers["chamber"] == "House", "house"] = "HOUSE OF REPRESENTATIVES"
-speakers.loc[speakers["chamber"] == "Senate", "house"] = "SENATE"
-speakers = speakers[["lastname", "bioname", "state_abbrev", "house", "party_name", "congress"]]
-speakers.drop_duplicates(inplace=True)
-
-session_dates = pd.read_csv("data/congress_dates.csv")
-session_dates["congress"] = session_dates["Congress"]
-session_dates.drop(columns=["Congress", "Session"], axis=1, inplace=True)
-session_dates["Begin Date"] = pd.to_datetime(session_dates["Begin Date"], format="%b %d, %Y", errors="raise")
-session_dates["Adjourn Date"] = pd.to_datetime(session_dates["Adjourn Date"], format="%b %d, %Y", errors="raise")
-aggregation_functions = {'Begin Date': 'min', 'Adjourn Date': 'max'}
-session_dates = session_dates.groupby(session_dates["congress"]).aggregate(aggregation_functions)
-speakers = pd.merge(speakers, session_dates, on="congress", how="left")
-
-df = pd.read_csv("data/speeches.csv", delimiter="|")
-df["lastname"] = df["clean_names"].str.extract(r"\b(\w*?)$")
-df.drop(columns=["clean_names"], inplace=True)
 
 def date_conversion(row):
     # this function needs to catch weird edge cases from bad OCR
@@ -88,16 +62,56 @@ def date_conversion(row):
         print(f"{month} {day} {year}")
         return pd.to_datetime(datetime.now())
 
+# read in raw speakers file
+# members sourced from: https://voteview.com/articles/data_help_members
+speakers = pd.read_csv("data/HSall_members.csv")
+
+# get rid of presidents
+speakers["congress"] = speakers["congress"].astype(int)
+speakers = speakers [speakers["chamber"] != "President"]
+
+# rename chambers 
+speakers.loc[speakers["chamber"] == "House", "house"] = "HOUSE OF REPRESENTATIVES"
+speakers.loc[speakers["chamber"] == "Senate", "house"] = "SENATE"
+
+# separate first name and last name
+speakers[["l_name", "f_name"]] = speakers["bioname"].str.split(",", n=1, expand=True)
+
+# merge with party names
+# parties sourced from: https://voteview.com/articles/data_help_parties
+parties = pd.read_csv("data/HSall_parties.csv")[["party_code", "party_name"]]
+speakers = pd.merge(speakers, parties, on="party_code")
+
+# combine session dates with speaker dat
+# get session dates from: https://github.com/shmcminn/congress-begin-end-dates/blob/master/congress-begin-end-dates.csv
+session_dates = pd.read_csv("data/congress_dates.csv")
+session_dates.rename(columns={"Congress": "congress"}, inplace=True)
+session_dates["Begin Date"] = pd.to_datetime(session_dates["Begin Date"], format="%b %d, %Y", errors="raise")
+session_dates["Adjourn Date"] = pd.to_datetime(session_dates["Adjourn Date"], format="%b %d, %Y", errors="raise")
+session_dates = session_dates.groupby(session_dates["congress"]).agg({'Begin Date': 'min', 'Adjourn Date': 'max'})
+speakers = pd.merge(speakers, session_dates, on="congress", how="left")
+
+# select columns and drop duplicates
+speakers.rename(columns={"state_abbrev": "state", "district_code": "district"}, inplace=True)
+speakers = speakers[["l_name", "f_name", "bioname", "state", "house", "party_name", "congress", "district", "chamber", 'Begin Date', 'Adjourn Date']]
+speakers.drop_duplicates(inplace=True)
+
+# read in speech data
+df = pd.read_csv("data/speeches.csv", delimiter="|")
+df.rename(columns={"speeches": "speech"}, inplace=True)
+df["l_name"] = df["clean_names"].str.extract(r"\b(\w*?)$")
+df.drop(columns=["clean_names"], inplace=True)
+
 # conversion to datetime for speeches
-df["day"] = df["day"].fillna(1).astype(int) # generally this seems to work
-df["year"] = df["year"].fillna(2011).astype(int) # an outlandish year
+df["day"] = df["day"].fillna(1).astype(int) # only one date na (corrects it)
+df["year"] = df["year"].fillna(2011).astype(int) # an outlandish year to catch them
 df["datetime"] = df[['month','day','year']].apply(date_conversion, axis=1)
 
 df['year'] = df['datetime'].dt.year
 df['month'] = df['datetime'].dt.month
 df['day'] = df['datetime'].dt.day
 
-df['lastname'] = df['lastname'].fillna(0)
+df['l_name'] = df['l_name'].fillna(0)
 df['house'] = df['house'].fillna(0)
 
 df.drop_duplicates(inplace=True)
@@ -105,23 +119,41 @@ speakers.drop_duplicates(inplace=True)
 
 df_original = df.copy()
 
-df = pd.merge(df, speakers, on=["lastname", "house"], how="left") # it gets much bigger here
+# merging attaches all speakers that match onto left
+# duplciate matches are created (to be filtered later)
+df = pd.merge(df, speakers, on=["l_name", "house"], how="left") # it gets much bigger here
 
 df_na = df[df.isna().any(axis=1)]
 df = df[(df["datetime"] >= df["Begin Date"]) & (df["datetime"] <= df["Adjourn Date"])]
 df = pd.concat([df, df_na])
+
 df1 = df_original
-df2 = df[["house", "month", "day", "year", "speeches", "lastname", "datetime"]]
+df2 = df[["house", "month", "day", "year", "speech", "l_name", "datetime"]]
 df1_values_not_in_df2 = df1[~df1.astype(str).apply(tuple, 1).isin(df2.astype(str).apply(tuple, 1))]
 df = pd.concat([df, df1_values_not_in_df2])
-df_duplicates = df[df.duplicated(subset=["house", "month", "day", "year", "speeches", "lastname", "datetime"], keep=False)]
+df_duplicates = df[df.duplicated(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"], keep=False)]
+
 # drop duplicates (keeps first match, but deletes the rest)
-df.drop_duplicates(subset=["house", "month", "day", "year", "speeches", "lastname", "datetime"], inplace=True)
+df.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"], inplace=True)
 df.sort_index(inplace=True)
 df.reset_index(inplace=True, drop=True)
 
+df["date"] = df["datetime"].dt.strftime("%d %b %Y")
+df.rename(columns={"bioname": "speaker", "party_name": "party"}, inplace=True)
+
+# df = df[["speech", "date", "speaker", "party", "district", "f_name", "l_name", "chamber", "gender", "state"]]
+df = df[["speech", "date", "speaker", "party", "district", "f_name", "l_name", "chamber", "state"]]
+
+print(df)
+
 """
-'house', 'month', 'day', 'year', 'speeches', 'lastname', 'datetime', 'bioname', 'state_abbrev', 'party_name', 'congress', 'Begin Date', 'Adjourn Date'
+'house', 'month', 'day', 'year', 'speech', 'l_name', 'fname', 'datetime', 'bioname', 'state', 'party_name', 'congress', 'Begin Date', 'Adjourn Date'
+
+to
+
+figure out gender
+
+speech_id speech date speaker party district f_name l_name chamber gender state stemmed
 """
 # df.to_csv("speakermap.csv", sep="|", index=False, header=True)
 # df_duplicates.to_csv("speakermap_duplicates.csv", sep="|", index=False, header=True)
