@@ -54,9 +54,9 @@ def send_req(params : Dict):
         params["section"] = i
         i += 1
         try:
-            req = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers, timeout=30)
+            resp = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers, timeout=30)
             try:
-                text = re.findall("<pre>([\s\S]*)<\/pre>", req.text)[0]
+                text = re.findall("<pre>([\s\S]*)<\/pre>", resp.text)[0]
             except IndexError:
                 text = "\n" # newlines are adding double newlines but it breaks otherwise
         except requests.exceptions.Timeout:
@@ -72,7 +72,7 @@ def scrape_pages(req_headers):
         "print": "section",
         "ext": ".txt",
         "req_header": req_headers
-    }, range(1, 128)))
+    }, range(1, 128)))[:2]
 
     with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
         # map preserves order of the transcripts
@@ -80,23 +80,19 @@ def scrape_pages(req_headers):
             total=len(req_params),
             desc= "scraping all congressional speeches (each iteration takes a while)"
         ))
-
     concat_list = [j for i in all_transcript for j in i] # flatten transcripts
-    all_transcript = list(map(remove_dashes_and_newlines, concat_list))
-    concat_transcripts = "\n".join(all_transcript)
-    concat_transcripts = concat_transcripts.replace("\n", "")
-    
-    return concat_transcripts
+    transcript = list(map(remove_dashes_and_newlines, concat_list))
+    concat_transcripts = "\n".join(transcript)
+    new_concat_transcripts = concat_transcripts.replace("\n", "")
+    return new_concat_transcripts
 
 def save_transcript(transcript):
-    with open("output.txt", "w", encoding="utf-8") as f:
+    with open("temp/scrape_output.txt", "w", encoding="utf-8") as f:
         f.truncate()
         f.write(transcript)
 
 def scrape_transcripts():
+    print("Scraping Websites")
     req_headers = get_user_permissions()
     complete_transcript = scrape_pages(req_headers)
     save_transcript(complete_transcript)
-    return complete_transcript
-
-scrape_transcripts()

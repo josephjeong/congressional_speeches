@@ -1,4 +1,5 @@
 /data
+/temp
 /local
 /output
 __pycache__

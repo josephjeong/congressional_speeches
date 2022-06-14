@@ -74,10 +74,11 @@ def date_conversion(row : pd.Series) -> pd.DatetimeIndex:
         print(f"{month} {day} {year}")
         return pd.to_datetime(datetime.now())
 
+# def gen_speakers(speakers: str) -> pd.DataFrame:
 def gen_speakers() -> pd.DataFrame:
     # read in raw speakers file
     # members sourced from: https://voteview.com/articles/data_help_members
-    speakers = pd.read_csv("data/HSall_members.csv")
+    speakers = pd.read_csv("data/HSall_dataset/HSall_members.csv")
     speakers["congress"] = speakers["congress"].astype(int)
 
     # get rid of presidents
@@ -92,12 +93,12 @@ def gen_speakers() -> pd.DataFrame:
 
     # merge with party names
     # parties sourced from: https://voteview.com/articles/data_help_parties
-    parties = pd.read_csv("data/HSall_parties.csv")[["party_code", "party_name"]]
+    parties = pd.read_csv("data/HSall_dataset/HSall_parties.csv")[["party_code", "party_name"]]
     speakers = pd.merge(speakers, parties, on="party_code")
 
     # combine session dates with speaker dat
     # get session dates from: https://github.com/shmcminn/congress-begin-end-dates/blob/master/congress-begin-end-dates.csv
-    session_dates = pd.read_csv("data/congress_dates.csv")
+    session_dates = pd.read_csv("data/HSall_dataset/congress_dates.csv")
     session_dates.rename(columns={"Congress": "congress"}, inplace=True)
     session_dates["Begin Date"] = pd.to_datetime(session_dates["Begin Date"], format="%b %d, %Y", errors="raise")
     session_dates["Adjourn Date"] = pd.to_datetime(session_dates["Adjourn Date"], format="%b %d, %Y", errors="raise")
@@ -109,9 +110,26 @@ def gen_speakers() -> pd.DataFrame:
     speakers = speakers[["l_name", "f_name", "bioname", "state", "house", "party_name", "congress", "district", "chamber", 'Begin Date', 'Adjourn Date']]
     return speakers.drop_duplicates()
 
-def gen_speeches() -> pd.DataFrame():
-    # read in speech data
-    df = pd.read_csv("data/speeches.csv", delimiter="|")
+# def gen_speeches() -> pd.DataFrame():
+#     # read in speech data
+#     df = pd.read_csv("data/speeches.csv", delimiter="|")
+#     df.rename(columns={"speeches": "speech"}, inplace=True)
+#     df["l_name"] = df["clean_names"].str.extract(r"\b(\w*?)$")
+
+#     # assume all men
+#     df["gender"] = "M"
+
+#     # conversion to datetime for speeches
+#     df["day"] = df["day"].fillna(1).astype(int) # only one date na (corrects it)
+#     df["year"] = df["year"].fillna(2011).astype(int) # an outlandish year to catch them
+#     df["datetime"] = df[['month','day','year']].apply(date_conversion, axis=1)
+
+#     # fillna and drop_dupes to make merge work
+#     df['l_name'] = df['l_name'].fillna(0)
+#     df['house'] = df['house'].fillna(0)
+#     return df.drop_duplicates()
+
+def process_speeches(df):
     df.rename(columns={"speeches": "speech"}, inplace=True)
     df["l_name"] = df["clean_names"].str.extract(r"\b(\w*?)$")
 
@@ -162,12 +180,12 @@ def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) ->
 
     return speeches, speeches_duplicates
 
-def map_speakers():
+def map_speakers(speeches):
+    print("Mapping Speakers")
     speakers = gen_speakers()
-    speeches = gen_speeches()
+    # speeches = gen_speeches()
+    speeches = process_speeches(speeches)
     df, df_duplicates = merge_speakers_speeches(speeches, speakers)
-    df_duplicates.to_csv("speakermap_duplicates.csv", sep="|", index=False, header=True)
-    # df.to_csv("speakermap.csv", sep="|", index=False, header=True)
+    df_duplicates.to_csv("temp/speakermap_duplicates.csv", sep="|", index=False, header=True)
+    df.to_csv("temp/speakermap.csv", sep="|", index=False, header=True)
     return df
-
-map_speakers()

@@ -5,3 +5,6 @@ Setup instructions:
 
 The first time you run the code, it'll create a corpus.
 Each subsequent run will load the corpus and output to freq.csv
+
+# Issues:
+- A weird encoding bug prevents the joining of strings in array in scrape.py
