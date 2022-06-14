@@ -1,13 +1,14 @@
-from typing import Dict
-import requests
-from seleniumwire import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from urllib.parse import urlencode
-from os import getcwd
 import re
 from concurrent.futures import ThreadPoolExecutor
+from os import getcwd
+from typing import Dict
+from urllib.parse import urlencode
+
+import requests
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from seleniumwire import webdriver
 from tqdm import tqdm
 
 PATH = getcwd() + "/chromedriver"

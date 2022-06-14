@@ -12,9 +12,10 @@ figure out gender
 speech_id speech date speaker party district f_name l_name chamber gender state stemmed
 '''
 
-from typing import Tuple
-import pandas as pd
 from datetime import datetime
+from typing import Tuple
+
+import pandas as pd
 
 def date_conversion(row : pd.Series) -> pd.DatetimeIndex:
     '''
