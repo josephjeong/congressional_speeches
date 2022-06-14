@@ -1,4 +1,6 @@
 /data
+/local
+/output
 __pycache__
 *.log
 *.txt
