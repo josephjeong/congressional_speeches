@@ -161,12 +161,12 @@ def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) ->
 
     return speeches, speeches_duplicates
 
-def main():
+def map_speakers():
     speakers = gen_speakers()
     speeches = gen_speeches()
     df, df_duplicates = merge_speakers_speeches(speeches, speakers)
-    print(df)
-    df.to_csv("speakermap.csv", sep="|", index=False, header=True)
     df_duplicates.to_csv("speakermap_duplicates.csv", sep="|", index=False, header=True)
+    # df.to_csv("speakermap.csv", sep="|", index=False, header=True)
+    return df
 
-main()
+map_speakers()
