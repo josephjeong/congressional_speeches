@@ -12,15 +12,13 @@ def generate_speech_id(df):
     return df
 
 def create_corpus():
-    # scrape_transcripts()
+    scrape_transcripts()
     structured_text = structure_raw_text()
     scrape_df = map_speakers(structured_text)
-    # scrape_df = map_speakers(0)
-    print("wow!")
     scrape_df['speech_id'] = scrape_df.index
     hein_df = process_hein()
     df = pd.concat([scrape_df, hein_df])
-    # df = stem_words(df)
+    df = stem_words(df)
     df["district"].replace({".": 0}, inplace=True)
     df["district"].fillna(0, inplace=True)
     df["district"] = df["district"].astype(float)
@@ -36,15 +34,11 @@ def create_corpus():
         "gender": "string",
         "state": "string",
         "speech_id": "int",
-        # "stem": "string"
+        "stem": "string"
     })
-    # print(df)
     df.sample(n=100).to_csv("temp/corpus_sample.csv", index=False, sep="|")
     df.to_parquet("temp/corpus.gzip", index=False, compression="gzip", engine="pyarrow")
     return df
-
-    import sys
-    sys.exit(1)
 
 def read_corpus():
     """

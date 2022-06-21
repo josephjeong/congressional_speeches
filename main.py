@@ -4,6 +4,7 @@ import re
 import os
 import pandas as pd
 import sys
+from src.check_init import check_init
 from src.frequency_bound import frequency_bound, frequency_bound_stem
 from src.create_corpus import create_corpus, read_corpus
 
@@ -29,20 +30,20 @@ def main():
         start_year = datetime(min(list(map(lambda x: int(x), years[0]))), 1, 1)
         end_year = datetime(max(list(map(lambda x: int(x), years[0]))) + 1, 1, 1)
 
+    # check all files and folders are created and initialised
+    check_init()
+
     # create unified corpus
     df = None
-    if (not os.path.exists("data/corpus.gzip")): df = create_corpus()
+    if (not os.path.exists("temp/corpus.gzip")): df = create_corpus()
     else: df = read_corpus()
     df["date"] = df["date"].astype(float).astype(int).astype(str)
     df["date"] = pd.to_datetime(df['date'], format="%Y%m%d")
 
     if stem: df = frequency_bound_stem(df, word, start_year, end_year)
     else: df = frequency_bound(df, word, start_year, end_year)
-    print(df)
 
-    return
-
-    df.to_csv("freq.csv", sep="|", index=False) # sometimes this overflows into the next row
+    df.to_csv("output/freq.csv", sep="|", index=False) # sometimes this overflows into the next row
 
 if __name__ == "__main__":
     main()

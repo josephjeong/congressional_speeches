@@ -21,7 +21,7 @@ def process_hein():
     # return pd.read_parquet("temp/hein_corpus.gzip", engine="pyarrow")
     nltk.download("punkt")
     DIR = "data/hein_dataset/hein-bound/"
-    files = os.listdir(DIR)[:50]
+    files = os.listdir(DIR)
     
     speech_files = list(map(lambda x: DIR + x, filter(lambda x: "speeches" in x, files)))
     speeches = None # higher namespace

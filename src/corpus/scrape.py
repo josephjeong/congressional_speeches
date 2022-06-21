@@ -61,6 +61,10 @@ def send_req(params : Dict):
                 text = "\n" # newlines are adding double newlines but it breaks otherwise
         except requests.exceptions.Timeout:
             text = "\n"
+        # except requests.exceptions.ConnectionError:
+        #     # i want to heavily emphasise that this wasn't an issue before and we are likely experiencing data loss
+        #     print("connection error", params)
+        #     text = "\n"
         output.append(text)
     return output
 
@@ -72,7 +76,7 @@ def scrape_pages(req_headers):
         "print": "section",
         "ext": ".txt",
         "req_header": req_headers
-    }, range(1, 128)))[:2]
+    }, range(1, 128)))
 
     with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
         # map preserves order of the transcripts
