@@ -172,7 +172,7 @@ def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) ->
     speeches.reset_index(inplace=True, drop=True)
 
     # create date field
-    speeches["date"] = speeches["datetime"].dt.strftime("%d %b %Y")
+    speeches["date"] = speeches["datetime"].dt.strftime("%Y%m%d")
     speeches.rename(columns={"bioname": "speaker", "party_name": "party"}, inplace=True)
 
     # create correct column names to match corpus.gzip

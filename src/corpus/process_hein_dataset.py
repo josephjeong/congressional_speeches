@@ -18,9 +18,10 @@ def load_speakers(dir: str) -> pd.DataFrame():
     return pd.read_csv(dir, sep="|", encoding="latin1")
 
 def process_hein():
+    # return pd.read_parquet("temp/hein_corpus.gzip", engine="pyarrow")
     nltk.download("punkt")
     DIR = "data/hein_dataset/hein-bound/"
-    files = os.listdir(DIR)[:1000]
+    files = os.listdir(DIR)[:50]
     
     speech_files = list(map(lambda x: DIR + x, filter(lambda x: "speeches" in x, files)))
     speeches = None # higher namespace
@@ -103,7 +104,7 @@ def process_hein():
     df = df.astype(str)
 
     # date, who said it, which party, which chamber, state, district
-    print("Saving Parquet")
+    # print("Saving Parquet")
     df.to_parquet("temp/hein_corpus.gzip", index=False, compression="gzip", engine="pyarrow")
 
     return df
