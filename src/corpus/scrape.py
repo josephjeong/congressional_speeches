@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from seleniumwire import webdriver
 from tqdm import tqdm
 
-PATH = getcwd() + "/chromedriver"
+PATH = getcwd() + "/chromedriver.exe"
 
 def get_user_permissions():
     driver = webdriver.Chrome(PATH)

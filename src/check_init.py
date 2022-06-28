@@ -18,7 +18,7 @@ def check_init() -> None:
         "data/HSall_dataset/congress_dates.csv": "https://github.com/shmcminn/congress-begin-end-dates/blob/master/congress-begin-end-dates.csv\nAnd please remove all rows where the date format is not: %b %d, %Y",
         "data/HSall_dataset/HSall_members.csv": "https://voteview.com/articles/data_help_members",
         "data/HSall_dataset/HSall_parties.csv": "https://voteview.com/articles/data_help_parties",
-        "chromedriver": "Please download the relevant chromedriver here: https://chromedriver.chromium.org/downloads"
+        "chromedriver.exe": "Please download the relevant chromedriver here: https://chromedriver.chromium.org/downloads"
     }
 
     all_exist = True
