@@ -12,6 +12,7 @@ def check_init() -> None:
         if not os.path.exists(folder):
             print(f"Creating path: {folder}")
             os.makedirs(folder)
+
     files_to_exist = {
         "data/hein_dataset/hein-bound/043_SpeakerMap.txt": "https://primoa.library.unsw.edu.au/primo-explore/fulldisplay?docid=UNSW_ALMA61158502230001731&vid=UNSWS&lang=en_US&context=L",
         "data/HSall_dataset/congress_dates.csv": "https://github.com/shmcminn/congress-begin-end-dates/blob/master/congress-begin-end-dates.csv\nAnd please remove all rows where the date format is not: %b %d, %Y",
