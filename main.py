@@ -43,6 +43,7 @@ def main():
     if stem: df = frequency_bound_stem(df, word, start_year, end_year)
     else: df = frequency_bound(df, word, start_year, end_year)
 
+    print(df)
     df.to_csv("output/freq.csv", sep="|", index=False) # sometimes this overflows into the next row
 
 if __name__ == "__main__":

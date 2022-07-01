@@ -12,7 +12,7 @@ def generate_speech_id(df):
     return df
 
 def create_corpus():
-    scrape_transcripts()
+    # scrape_transcripts()
     structured_text = structure_raw_text()
     scrape_df = map_speakers(structured_text)
     scrape_df['speech_id'] = scrape_df.index
@@ -34,7 +34,7 @@ def create_corpus():
         "gender": "string",
         "state": "string",
         "speech_id": "int",
-        "stem": "string"
+        "stemmed": "string"
     })
     df.sample(n=100).to_csv("temp/corpus_sample.csv", index=False, sep="|")
     df.to_parquet("temp/corpus.gzip", index=False, compression="gzip", engine="pyarrow")

@@ -46,13 +46,13 @@ def date_conversion(row : pd.Series) -> pd.DatetimeIndex:
     elif (date == "January 27 18"): year = 1868
     elif (date == "June 27 1"): year = 1868
     elif (date == "January 80 1871"): day = 30
-    elif (date == "April 1 2011"): year = 1836
-    elif (date == "February 27 2011"): year = 1838
-    elif (date == "July 9 2011"): year = 1841
-    elif (date == "December 29 2011"): year = 1848
-    elif (date == "January 11 2011"): year = 1853
-    elif (date == "December 17 2011"): year = 1856
-    elif (date == "April 19 2011"): year = 1836
+    # elif (date == "April 1 2011"): year = 1836
+    # elif (date == "February 27 2011"): year = 1838
+    # elif (date == "July 9 2011"): year = 1841
+    # elif (date == "December 29 2011"): year = 1848
+    # elif (date == "January 11 2011"): year = 1853
+    # elif (date == "December 17 2011"): year = 1856
+    # elif (date == "April 19 2011"): year = 1836
     elif (date == "February 25 1637"): year = 1837
     elif (date == "May 1 1640"): year = 1840
     elif (date == "July 28 1641"): year = 1841
@@ -66,12 +66,19 @@ def date_conversion(row : pd.Series) -> pd.DatetimeIndex:
     elif (date == "April 4 1806"): year = 1866
     elif (date == "January 19 1887"): year = 1867
     elif (date == "July 5 1887"): year = 1867
+    elif (date == "April 1 1"): year = 1836
+    elif (date == "April 19 1"): year = 1836
+    elif (date == "February 27 1"): year = 1838
+    elif (date == "July 9 1"): year = 1841
+    elif (date == "December 29 1"): year = 1848
+    elif (date == "January 11 1"): year = 1853
+    elif (date == "December 17 1"): year = 1856
     # return datetime.strptime(f"{month} {day} {year}", '%B %d %Y')
     try:
-        if (year < 1833 or year > 1875): print(f"{month} {day} {year}")
+        if (year < 1833 or year > 1875): print(f"Incorrect date: {month} {day} {year}")
         return pd.to_datetime(f"{month} {day} {year}", format='%B %d %Y')
     except:
-        print(f"{month} {day} {year}")
+        print(f"Incorrect date: {month} {day} {year}")
         return pd.to_datetime(datetime.now())
 
 # def gen_speakers(speakers: str) -> pd.DataFrame:
@@ -135,6 +142,9 @@ def process_speeches(df):
 
     # assume all men
     df["gender"] = "M"
+
+    # lots of empty strings
+    df = df.replace(r'^\s*$', 1, regex=True)
 
     # conversion to datetime for speeches
     df["day"] = df["day"].fillna(1).astype(int) # only one date na (corrects it)

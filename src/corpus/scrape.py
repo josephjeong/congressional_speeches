@@ -33,6 +33,7 @@ def get_user_permissions():
         'Authentication timed out'
     )
     reqs = driver.requests
+    # print(reqs)
     driver.quit()
     text_req = list(filter(lambda req: "TextGenerator" in req.url , reqs))[-1]
     return dict(text_req.headers)
@@ -53,8 +54,9 @@ def send_req(params : Dict):
     while text != "\n":
         params["section"] = i
         i += 1
+        # print(params["handle"], i)
         try:
-            resp = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers, timeout=30)
+            resp = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers, timeout=120)
             try:
                 text = re.findall("<pre>([\s\S]*)<\/pre>", resp.text)[0]
             except IndexError:
@@ -78,7 +80,7 @@ def scrape_pages(req_headers):
         "req_header": req_headers
     }, range(1, 128)))
 
-    with ThreadPoolExecutor(max_workers=len(req_params)) as executor:
+    with ThreadPoolExecutor(max_workers=25) as executor:
         # map preserves order of the transcripts
         all_transcript = list(tqdm(executor.map(send_req, req_params), 
             total=len(req_params),
