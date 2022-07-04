@@ -54,7 +54,7 @@ def send_req(params : Dict):
     while text != "\n":
         params["section"] = i
         i += 1
-        # print(params["handle"], i)
+        print(params["handle"], i)
         try:
             resp = requests.get(url="https://heinonline-org.wwwproxy1.library.unsw.edu.au/HOL/TextGenerator?" + urlencode(params), headers=req_headers, timeout=120)
             try:
@@ -62,6 +62,7 @@ def send_req(params : Dict):
             except IndexError:
                 text = "\n" # newlines are adding double newlines but it breaks otherwise
         except requests.exceptions.Timeout:
+            print("timed out!", params)
             text = "\n"
         # except requests.exceptions.ConnectionError:
         #     # i want to heavily emphasise that this wasn't an issue before and we are likely experiencing data loss

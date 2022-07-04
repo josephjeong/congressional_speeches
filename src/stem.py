@@ -1,4 +1,5 @@
 import nltk
+import pandas as pd
 from nltk.stem import PorterStemmer
 import concurrent.futures
 from tqdm import tqdm
@@ -14,18 +15,14 @@ def clean(raw):
         # print(raw)
         return ""
 
-def stem_words(df):
+def stem_words(df : pd.DataFrame):
     # stem words
-    print("Creating Stemmed Speeches")
-
-    # read metadata for future reference
-    # with concurrent.futures.ProcessPoolExecutor() as executor:
-    #     df["stemmed"] = list(tqdm(
-    #             executor.map(clean, df["speech"], chunksize=1000),
-    #             total = df.shape[0],
-    #             desc= "Creating Stemmed Speeches"
-    #         )
-    #     )
-
-    df["stemmed"] = df["speech"].apply(clean)
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        stemmed = list(tqdm(
+                executor.map(clean, df["speech"], chunksize=1000),
+                total = df.shape[0],
+                desc= "Creating Stemmed Speeches"
+            )
+        )
+        df["stemmed"] = stemmed
     return df
