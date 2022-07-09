@@ -12,7 +12,6 @@ def clean(raw):
         return " ".join(stemmed)
     except:
         # some are 1 integers
-        # print(raw)
         return ""
 
 def stem_words(df : pd.DataFrame):

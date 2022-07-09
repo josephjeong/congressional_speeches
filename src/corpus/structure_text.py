@@ -1,9 +1,6 @@
 import re
 from typing import List
-
 from pandas import DataFrame
-
-from pprint import pprint
 
 def find_clean_name(l : List[str]):
     for s in l:

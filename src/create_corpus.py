@@ -1,5 +1,4 @@
-from re import L
-import numpy as np
+import os
 import pandas as pd
 
 from src.corpus.process_hein_dataset import process_hein
@@ -8,11 +7,8 @@ from src.corpus.speakermap import map_speakers
 from src.corpus.structure_text import structure_raw_text
 from src.stem import stem_words
 
-def generate_speech_id(df):
-    return df
-
 def create_corpus():
-    # scrape_transcripts()
+    if (not os.path.exists("temp/scrape_output.txt")): scrape_transcripts()
     structured_text = structure_raw_text()
     scrape_df = map_speakers(structured_text)
     scrape_df['speech_id'] = scrape_df.index
