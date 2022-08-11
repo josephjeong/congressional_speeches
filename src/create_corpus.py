@@ -8,7 +8,7 @@ from src.corpus.structure_text import structure_raw_text
 from src.stem import stem_words
 
 def create_corpus():
-    if (not os.path.exists("temp/scrape_output.txt")): scrape_transcripts()
+    # if (not os.path.exists("temp/scrape_output.txt")): scrape_transcripts()
     structured_text = structure_raw_text()
     scrape_df = map_speakers(structured_text)
     scrape_df['speech_id'] = scrape_df.index

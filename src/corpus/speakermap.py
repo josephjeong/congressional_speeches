@@ -90,7 +90,7 @@ def gen_speakers() -> pd.DataFrame:
     parties = pd.read_csv("data/HSall_dataset/HSall_parties.csv")[["party_code", "party_name"]]
     speakers = pd.merge(speakers, parties, on="party_code")
 
-    # combine session dates with speaker dat
+    # combine session dates with speaker data
     # get session dates from: https://github.com/shmcminn/congress-begin-end-dates/blob/master/congress-begin-end-dates.csv
     session_dates = pd.read_csv("data/HSall_dataset/congress_dates.csv")
     session_dates.rename(columns={"Congress": "congress"}, inplace=True)
@@ -132,22 +132,74 @@ def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) ->
     # duplciate matches are created (to be filtered later)
     speeches = pd.merge(speeches, speakers, on=["l_name", "house"], how="left") # it gets much bigger here
 
+    print(speeches)
+    # 16,066,393
+
+    '''
+    So the problem is, there are some speeches that map to speakers, but not to valid speakers
+    So some speeches get deleted by "speeches[(speeches["datetime"] >= speeches["Begin Date"]) & (speeches["datetime"] <= speeches["Adjourn Date"])]"
+    without necessarily knowing. 
+
+    The intended behaviour should be na
+    I think there are 156,974 of these results
+
+    speeches_na -> don't need to touch
+
+    speeches -> split into:
+        speeches_matched -> don't need to touch
+        speeches_unmatched -> convert and add to speeches_na
+            we make this by finding the difference between speeches.deduped (small), and speeches_matched
+    
+    Once this gets done, we should have the same number of speeches in as out
+    '''
+
     # filter out all speakers who's congressional dates don't match the speech date
     speeches_na = speeches[speeches.isna().any(axis=1)] # na speakers will cause next line to error
     speeches = speeches[(speeches["datetime"] >= speeches["Begin Date"]) & (speeches["datetime"] <= speeches["Adjourn Date"])]
-    speeches = pd.concat([speeches, speeches_na])
+    # speeches = pd.concat([speeches, speeches_na])
+
+    print(speeches_og)
+    # no duplicate speeches
+    # keep=False -> 1,182,423 rows, noremoveduplicates = 1,182,428
+    # but speeches that are outside the range, are removed
+
+    # print(speeches.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"]))
+    print(speeches)
+    print(speeches_na)
+    # no duplicates in speeches_na
+
+    # all speeches are now either na, or within the time
+
+    '''
+    # NA speeches have no speaker attached?
+    # therefore, no info?
 
     # detect duplicate values as seen from df_original
-    speeches_small = speeches[["house", "month", "day", "year", "speech", "l_name", "datetime"]]
-    df_og_values_not_in_df_small = speeches_og[~speeches_og.astype(str).apply(tuple, 1).isin(
-        speeches_small.astype(str).apply(tuple, 1))]
-    speeches = pd.concat([speeches, df_og_values_not_in_df_small])
+    # speeches_small = speeches[["house", "month", "day", "year", "speech", "l_name", "datetime"]]
+
+    # get all the original speeches that are not in speeches_small
+    # why do we
+    # df_og_values_not_in_df_small = speeches_og[~speeches_og.astype(str).apply(tuple, 1).isin(
+    #     speeches_small.astype(str).apply(tuple, 1))]
+    
+    # print(df_og_values_not_in_df_small)
+
+    # speeches = pd.concat([speeches, df_og_values_not_in_df_small])
     speeches_duplicates = speeches[speeches.duplicated(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"], keep=False)]
 
     # drop duplicates (keeps first match, but deletes the rest)
-    speeches.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"], inplace=True)
+    speeches.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"], inplace=True, keep=False)
     speeches.sort_index(inplace=True)
     speeches.reset_index(inplace=True, drop=True)
+
+    print(speeches)
+    print(speeches_duplicates.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"]))
+
+    print(speeches_og.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"]))
+    '''
+
+    import sys
+    sys.exit(1)
 
     # create date field
     speeches["date"] = speeches["datetime"].dt.strftime("%Y%m%d")
