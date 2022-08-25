@@ -4,6 +4,7 @@ possible improvements:
 - deal with the gender generation
 '''
 from datetime import datetime
+from mimetypes import init
 from typing import Tuple
 
 import pandas as pd
@@ -124,91 +125,140 @@ def process_speeches(df):
     df['house'] = df['house'].fillna(0)
     return df.drop_duplicates()
 
-def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) -> Tuple[(pd.DataFrame, pd.DataFrame)]:
-    # copy to df_original to detect duplicate matches
-    speeches_og = speeches.copy()
+def lower_and_split(s : str):
+    s = s.lower()
+    s = s.split()
+    try: 
+        return s[0]
+    except:
+        print(s)
+        return ""
 
+def initials_apply(s : str):
+    s = lower_and_split(s)
+    s = s[0]
+    return s
+
+def reconcile_duplicates(df : pd.DataFrame):
+    # check how many have a first name
+    first_names = df[df["clean_names"].str.contains(" ")]
+    # one_space = "^[a-zA-Z0-9]+\s[a-zA-Z0-9]+$"
+    one_space = first_names["clean_names"].str.contains("^[a-zA-Z0-9]{2,}\s[a-zA-Z0-9]{2,}$")
+    first_names_only = first_names[one_space]
+    initials = first_names[~one_space]
+
+    # find the ones with first names
+    first_name_match_subset = first_names_only["clean_names"].apply(lower_and_split) == first_names_only["f_name"].apply(lower_and_split)
+    first_name_match = first_names_only[first_name_match_subset]
+    # print(first_name_match)
+
+    # take the remaining values 
+    first_name_no_match = first_names_only.merge(first_name_match.drop_duplicates(), on=["speech", "clean_names"], how="left", indicator=True)
+    first_name_no_match = first_name_no_match[first_name_no_match["_merge"] == "left_only"]
+
+    # process the initials
+    initials_match_subset = initials["clean_names"].apply(initials_apply) == initials["f_name"].apply(initials_apply)
+    initials_match = initials[initials_match_subset]
+    initials_no_match = initials.merge(initials_match.drop_duplicates(), on=["speech", "clean_names"], how="left", indicator=True)
+    initials_no_match = initials_no_match[initials_no_match["_merge"] == "left_only"]
+
+    match = pd.concat([first_name_match, initials_match])
+    no_match = pd.concat([first_name_no_match, initials_no_match])
+
+    # print(no_match)
+
+    no_match = no_match[['house_x', 'month_x', 'day_x', 'year_x', 'clean_names', 'speech',    
+        'l_name_x', 'gender_x', 'datetime_x', 'f_name_x', 'bioname_x',
+        'state_x', 'party_name_x', 'congress_x', 'district_x', 'chamber_x',    
+        'Begin Date_x', 'Adjourn Date_x']]
+    no_match = no_match.rename(columns={
+        'house_x' : 'house', 
+        'month_x' : 'month', 
+        'day_x' : 'day', 
+        'year_x' : 'year', 
+        'l_name_x' : 'l_name', 
+        'gender_x' : 'gender', 
+        'datetime_x' : 'datetime', 
+        'f_name_x' : 'f_name', 
+        'bioname_x' : 'bioname',
+        'state_x' : 'state', 
+        'party_name_x' : 'party_name', 
+        'congress_x' : 'congress', 
+        'district_x' : 'district', 
+        'chamber_x' : 'chamber',    
+        'Begin Date_x' : 'Begin Date', 
+        'Adjourn Date_x' : 'Adjourn Date'
+    })
+
+    return match, no_match
+
+def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) -> Tuple[(pd.DataFrame, pd.DataFrame)]:
+    num_speeches = speeches.shape[0]
     # merging attaches all speakers that match onto left
     # duplciate matches are created (to be filtered later)
     speeches = pd.merge(speeches, speakers, on=["l_name", "house"], how="left") # it gets much bigger here
 
-    print(speeches)
-    # 16,066,393
+    # find all na values and filter them out
+    na_mask = speeches.isna().any(axis=1)
+    speeches_na = speeches[na_mask] # no duplicates in speeches_na
+    speeches = speeches[~na_mask]
 
-    '''
-    So the problem is, there are some speeches that map to speakers, but not to valid speakers
-    So some speeches get deleted by "speeches[(speeches["datetime"] >= speeches["Begin Date"]) & (speeches["datetime"] <= speeches["Adjourn Date"])]"
-    without necessarily knowing. 
+    # find speeches who fit within the correct time
+    time_mask = (speeches["datetime"] >= speeches["Begin Date"]) & (speeches["datetime"] <= speeches["Adjourn Date"])
+    speeches_matched  = speeches[time_mask]
+    speeches_unmatched = speeches[~time_mask] # some of these are incorrectly unmatched
+    # we need to remove these duplicates, and add them to speeches_na
 
-    The intended behaviour should be na
-    I think there are 156,974 of these results
+    subset = ["house", "month", "day", "year", "speech", "l_name", "datetime"]
 
-    speeches_na -> don't need to touch
+    # for matched speeches, remove duplicates
+    duplicate_mask = speeches_matched.duplicated(subset=subset, keep=False)
+    speeches_duplicate = speeches_matched[duplicate_mask]
+    speeches_not_duplicate = speeches_matched[~duplicate_mask]
 
-    speeches -> split into:
-        speeches_matched -> don't need to touch
-        speeches_unmatched -> convert and add to speeches_na
-            we make this by finding the difference between speeches.deduped (small), and speeches_matched
-    
-    Once this gets done, we should have the same number of speeches in as out
-    '''
+    # find the number of incorrectly unmatched speeches
+    speeches_matched_no_dupes = pd.concat(
+        [speeches_na, 
+        speeches_duplicate.drop_duplicates(subset=subset, keep="first"), 
+        speeches_not_duplicate]
+    )
 
-    # filter out all speakers who's congressional dates don't match the speech date
-    speeches_na = speeches[speeches.isna().any(axis=1)] # na speakers will cause next line to error
-    speeches = speeches[(speeches["datetime"] >= speeches["Begin Date"]) & (speeches["datetime"] <= speeches["Adjourn Date"])]
-    # speeches = pd.concat([speeches, speeches_na])
+    # find common values between unmatched speeches, and matched speeches to put back into na
+    common = speeches_unmatched.merge(speeches_matched_no_dupes, on=subset, how="left", indicator=True)
+    speeches_unmatched_na = common[common['_merge'] == "left_only"].drop_duplicates(subset=subset)
+    speeches_na_final = pd.concat([speeches_na, speeches_unmatched_na])
 
-    print(speeches_og)
-    # no duplicate speeches
-    # keep=False -> 1,182,423 rows, noremoveduplicates = 1,182,428
-    # but speeches that are outside the range, are removed
+    # resolve duplicates
+    duplicates_match, duplicates_no_match = reconcile_duplicates(speeches_duplicate)
+    print(duplicates_no_match.columns)
 
-    # print(speeches.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"]))
-    print(speeches)
-    print(speeches_na)
-    # no duplicates in speeches_na
+    # add na speeches back to final matched
+    speeches_matched_final = pd.concat([speeches_not_duplicate, speeches_na_final, duplicates_match]).drop(labels=["_merge"], axis=1)
+    speeches_duplicate_final = duplicates_no_match
 
-    # all speeches are now either na, or within the time
+    print(speeches_duplicate_final.columns)
 
-    '''
-    # NA speeches have no speaker attached?
-    # therefore, no info?
-
-    # detect duplicate values as seen from df_original
-    # speeches_small = speeches[["house", "month", "day", "year", "speech", "l_name", "datetime"]]
-
-    # get all the original speeches that are not in speeches_small
-    # why do we
-    # df_og_values_not_in_df_small = speeches_og[~speeches_og.astype(str).apply(tuple, 1).isin(
-    #     speeches_small.astype(str).apply(tuple, 1))]
-    
-    # print(df_og_values_not_in_df_small)
-
-    # speeches = pd.concat([speeches, df_og_values_not_in_df_small])
-    speeches_duplicates = speeches[speeches.duplicated(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"], keep=False)]
-
-    # drop duplicates (keeps first match, but deletes the rest)
-    speeches.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"], inplace=True, keep=False)
-    speeches.sort_index(inplace=True)
-    speeches.reset_index(inplace=True, drop=True)
-
-    print(speeches)
-    print(speeches_duplicates.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"]))
-
-    print(speeches_og.drop_duplicates(subset=["house", "month", "day", "year", "speech", "l_name", "datetime"]))
-    '''
+    print(f"""
+    Final Stats for speech matching:
+    - Input Speeches: {num_speeches}
+    - One Match: {speeches_not_duplicate.shape[0] + duplicates_match.shape[0]}
+    - No Match: {speeches_na_final.shape[0]}
+    - Duplicate Matches: {speeches_duplicate_final.drop_duplicates(subset=subset).shape[0]}
+    - Total Output Speeches: {speeches_not_duplicate.shape[0] + speeches_na_final.shape[0] + speeches_duplicate.drop_duplicates(subset=subset).shape[0]}
+    - Missing Speeches: {num_speeches - (speeches_not_duplicate.shape[0] + speeches_na_final.shape[0] + speeches_duplicate.drop_duplicates(subset=subset).shape[0])}
+    """)
 
     import sys
     sys.exit(1)
 
     # create date field
-    speeches["date"] = speeches["datetime"].dt.strftime("%Y%m%d")
-    speeches.rename(columns={"bioname": "speaker", "party_name": "party"}, inplace=True)
+    speeches_matched_final["date"] = speeches_matched_final["datetime"].dt.strftime("%Y%m%d")
+    speeches_matched_final.rename(columns={"bioname": "speaker", "party_name": "party"}, inplace=True)
 
     # create correct column names to match corpus.gzip
-    speeches = speeches[["speech", "date", "speaker", "party", "district", "f_name", "l_name", "chamber", "gender", "state"]]
+    speeches_matched_final = speeches_matched_final[["speech", "date", "speaker", "party", "district", "f_name", "l_name", "chamber", "gender", "state"]]
 
-    return speeches, speeches_duplicates
+    return speeches_matched_final, speeches_duplicate_final
 
 def map_speakers(speeches):
     print("Mapping Speakers")
