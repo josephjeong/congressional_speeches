@@ -243,7 +243,7 @@ def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) ->
     - Input Speeches: {num_speeches}
     - One Match: {speeches_not_duplicate.shape[0] + duplicates_match.shape[0]}
     - No Match: {speeches_na_final.shape[0]}
-    - Duplicate Matches: {speeches_duplicate_final.drop_duplicates(subset=subset).shape[0]}
+    - Duplicate Matches: {speeches_duplicate_final.drop_duplicates(subset=["speech", "clean_names"]).shape[0]}
     - Total Output Speeches: {speeches_not_duplicate.shape[0] + speeches_na_final.shape[0] + speeches_duplicate.drop_duplicates(subset=subset).shape[0]}
     - Missing Speeches: {num_speeches - (speeches_not_duplicate.shape[0] + speeches_na_final.shape[0] + speeches_duplicate.drop_duplicates(subset=subset).shape[0])}
     """)
