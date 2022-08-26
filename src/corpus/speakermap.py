@@ -142,6 +142,7 @@ def initials_apply(s : str):
 def reconcile_duplicates(df : pd.DataFrame):
     # check how many have a first name
     first_names = df[df["clean_names"].str.contains(" ")]
+    not_first_names = df[~df["clean_names"].str.contains(" ")]
     # one_space = "^[a-zA-Z0-9]+\s[a-zA-Z0-9]+$"
     one_space = first_names["clean_names"].str.contains("^[a-zA-Z0-9]{2,}\s[a-zA-Z0-9]{2,}$")
     first_names_only = first_names[one_space]
@@ -165,8 +166,6 @@ def reconcile_duplicates(df : pd.DataFrame):
     match = pd.concat([first_name_match, initials_match])
     no_match = pd.concat([first_name_no_match, initials_no_match])
 
-    # print(no_match)
-
     no_match = no_match[['house_x', 'month_x', 'day_x', 'year_x', 'clean_names', 'speech',    
         'l_name_x', 'gender_x', 'datetime_x', 'f_name_x', 'bioname_x',
         'state_x', 'party_name_x', 'congress_x', 'district_x', 'chamber_x',    
@@ -189,6 +188,8 @@ def reconcile_duplicates(df : pd.DataFrame):
         'Begin Date_x' : 'Begin Date', 
         'Adjourn Date_x' : 'Adjourn Date'
     })
+
+    no_match = pd.concat([no_match, not_first_names])
 
     return match, no_match
 
@@ -230,13 +231,10 @@ def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) ->
 
     # resolve duplicates
     duplicates_match, duplicates_no_match = reconcile_duplicates(speeches_duplicate)
-    print(duplicates_no_match.columns)
 
     # add na speeches back to final matched
     speeches_matched_final = pd.concat([speeches_not_duplicate, speeches_na_final, duplicates_match]).drop(labels=["_merge"], axis=1)
     speeches_duplicate_final = duplicates_no_match
-
-    print(speeches_duplicate_final.columns)
 
     print(f"""
     Final Stats for speech matching:
@@ -247,9 +245,6 @@ def merge_speakers_speeches(speeches : pd.DataFrame, speakers : pd.DataFrame) ->
     - Total Output Speeches: {speeches_not_duplicate.shape[0] + speeches_na_final.shape[0] + speeches_duplicate.drop_duplicates(subset=subset).shape[0]}
     - Missing Speeches: {num_speeches - (speeches_not_duplicate.shape[0] + speeches_na_final.shape[0] + speeches_duplicate.drop_duplicates(subset=subset).shape[0])}
     """)
-
-    import sys
-    sys.exit(1)
 
     # create date field
     speeches_matched_final["date"] = speeches_matched_final["datetime"].dt.strftime("%Y%m%d")

@@ -34,10 +34,8 @@ def main():
     check_init()
 
     # create unified corpus
-    df = create_corpus()
-    # df = None
-    # if (not os.path.exists("temp/corpus.gzip")): df = create_corpus()
-    # else: df = read_corpus()
+    if (not os.path.exists("temp/corpus.gzip")): df = create_corpus()
+    else: df = read_corpus()
     df["date"] = df["date"].astype(float).astype(int).astype(str)
     df["date"] = pd.to_datetime(df['date'], format="%Y%m%d")
 
